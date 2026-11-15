@@ -1,23 +1,11 @@
-from pydantic import BaseModel
-from psycopg import Cursor
+from src.entities.dto.task.update import TaskUpdate
+from src.entities.dto.task.create import TaskCreate
 from psycopg.rows import dict_row
 import psycopg
 from fastapi import FastAPI
-from datetime import date
+
 
 app = FastAPI()
-
-class TaskCreate(BaseModel): 
-    title: str
-    description: str | None = None
-    status: str = "todo"
-    priority: int
-    due_date: date | None = None
-
-class TaskUpdate(BaseModel):
-    title: str | None = None
-    description: str | None = None
-    priority: int | None = None
 
 
 DATABASE_URL: str = (
