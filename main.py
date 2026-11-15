@@ -1,109 +1,14 @@
-from src.entities.dto.task.update import TaskUpdate
-from src.entities.dto.task.create import TaskCreate
-from psycopg.rows import dict_row
-import psycopg
 from fastapi import FastAPI
 
+from src.api.routes import task as task_routes
+from src.api.routes import user as user_routes
 
-app = FastAPI()
+app = FastAPI(title="Todo API")
 
-
-DATABASE_URL: str = (
-    "postgresql://postgres:12345@localhost:5432/fast_api"
-)
+app.include_router(user_routes.router)
+app.include_router(task_routes.router)
 
 
 @app.get("/")
-def hello():
-    return {"message": "Hello World"}
-
-
-@app.get("/users/{user_id}")
-def get_user_by_id(user_id: int):
-    return {"id": user_id}
-
-
-@app.post("/tasks")
-def create_task(task: TaskCreate):
-    with psycopg.connect(
-        DATABASE_URL,
-        row_factory=dict_row
-    ) as conn:
-
-
-        result = conn.execute(
-        """
-        INSERT INTO tasks
-        (title, description, status, priority, due_date)
-        VALUES
-        (%s, %s, %s, %s, %s)
-        RETURNING *
-        """,
-        (task.title, task.description, task.status, task.priority, task.due_date),
-        )
-
-        new_task = result.fetchone()
-
-        return new_task
-
-    
-@app.get('/tasks')
-def get_all_tasks():
-    with psycopg.connect(
-        DATABASE_URL,
-        row_factory=dict_row
-    ) as conn:
-
-
-        result = conn.execute(
-        """
-        SELECT * FROM tasks
-        """,
-        (),
-        )
-
-        tasks = result.fetchall()
-
-        return tasks
-
-@app.patch('/tasks/{task_id}')
-def update_task_priority(task_id: int, body: TaskUpdate):
-     with psycopg.connect(
-        DATABASE_URL,
-        row_factory=dict_row
-    ) as conn:
-
-        result = conn.execute(
-        """
-        UPDATE tasks
-        SET priority = %s
-        WHERE id = %s
-        RETURNING *
-        """,
-        (body.priority, task_id)
-)
-
-
-        updated_tasks = result.fetchone()
-
-        return updated_tasks
-
-@app.delete("/tasks/{task_id}")
-def delete_task_by_id(task_id: int):
-     with psycopg.connect(
-        DATABASE_URL,
-        row_factory=dict_row
-    ) as conn:
-     
-     
-        result = conn.execute(
-            """
-            DELETE FROM tasks WHERE id = %s
-            RETURNING id
-            """,
-        (task_id,)
-        )
-
-        deleted_task = result.fetchone()
-
-        return deleted_task
+def root():
+    return {"status": "ok"}

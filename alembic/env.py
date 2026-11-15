@@ -1,34 +1,48 @@
+from logging.config import fileConfig
+
 from alembic import context
 
+from src import models
 from src.db.connect import Base, engine
-from src.db import models
 
 
 config = context.config
 
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
 target_metadata = Base.metadata
 
 
-def run_migrations_offline():
+def include_object(obj, name, type_, reflected, compare_to):
+    if type_ == "table" and name == "alembic_version":
+        return False
+    return True
+
+
+def run_migrations_offline() -> None:
     context.configure(
         url=engine.url.render_as_string(hide_password=False),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
+        compare_server_default=True,
+        include_object=include_object,
     )
-
     with context.begin_transaction():
         context.run_migrations()
 
 
-def run_migrations_online():
+def run_migrations_online() -> None:
     with engine.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
+            compare_server_default=True,
+            include_object=include_object,
         )
-
         with context.begin_transaction():
             context.run_migrations()
 
